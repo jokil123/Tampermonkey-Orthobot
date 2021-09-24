@@ -5,6 +5,7 @@
 // @description  Log 'hello world' into console.
 // @author       You
 // @match        https://www.orthografietrainer.net/uebung/freiestraining.php*
+// @require      https://raw.githubusercontent.com/jokil123/Tampermonkey-Orthobot/master/packageImport.js
 // @require      https://raw.githubusercontent.com/jokil123/Tampermonkey-Orthobot/master/errorCodesList.js
 // @require      https://raw.githubusercontent.com/jokil123/Tampermonkey-Orthobot/master/interface.js
 // @require      https://raw.githubusercontent.com/jokil123/Tampermonkey-Orthobot/master/errorCorrection.js

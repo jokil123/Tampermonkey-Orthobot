@@ -1,116 +1,83 @@
-function DoStuff(){
-    console.log("STARTING JOB!");
-    CorrectSentence(getSentence());
+console.log("a");
+
+//const axios = require("axios");
+
+function DoStuff() {
+  console.log("STARTING JOB!");
+  console.log(RequestSentenceErrors("a"), "asdbv");
+  CorrectSentence(getSentence());
 }
 
+function CorrectSentence(sentence) {
+  let correctedSentence = sentence;
 
-function CorrectSentence(sentence)
-{
-    RequestSentenceErrors(sentence, ParseResponse);
+  let errorsToCorrect;
+
+  do {
+    axios
+      .post(
+        "https://mentor.duden.de/api/grammarcheck?_format=json",
+        GenerateRequestData(correctedSentence)
+      )
+      .then((res) => {
+        errorsToCorrect = FindNotableErrors(res.data);
+        correctedSentence = CorrectErrors(correctedSentence, errorsToCorrect);
+      });
+  } while (errorsToCorrect.length != 0);
 }
 
+function FindNotableErrors(json) {
+  totalErrors = json.data.spellAdvices;
 
-function CorrectionComplete(correctedSentence)
-{
-    console.log(correctedSentence);
-    writeSentence(correctedSentence);
+  sentenceErrors = [];
 
-    finalSentence = ""
-
-    console.log("JOB DONE!");
-}
-
-
-var finalSentence;
-
-function ParseResponse(response, originalSentence)
-{
-    responesJSON = JSON.parse(response);
-
-    console.log(responesJSON);
-
-    sentenceErrors = FindNotableErrors(responesJSON);
-
-    if (sentenceErrors.length > 0)
-    {
-        finalSentence = CorrectErrors(originalSentence, sentenceErrors);
-        console.log(finalSentence);
-        RequestSentenceErrors(finalSentence, ParseResponse);
+  totalErrors.forEach((item) => {
+    if (errorCodeIndicies.includes(parseInt(item.errorCode))) {
+      sentenceErrors.push(item);
     }
-    else
-    {
-        CorrectionComplete(finalSentence);
-    }
+  });
+
+  return sentenceErrors;
 }
-
-
-function FindNotableErrors(json)
-{
-    totalErrors = json.data.spellAdvices;
-
-    sentenceErrors = [];
-
-    totalErrors.forEach(item => {
-        if (errorCodeIndicies.includes(parseInt(item.errorCode))){
-            sentenceErrors.push(item);
-        }
-    });
-
-    return sentenceErrors;
-}
-
-
 
 // Correct Errors
 
-function CorrectErrors(sentence, sentenceErrors)
-{
-    var indexShift = 0;
-    sentenceErrors.forEach(item => {
-        sentence = ReplaceAtIndex(parseInt(item.offset) + indexShift, sentence, item.originalError, item.proposals[0])
+function CorrectErrors(sentence, sentenceErrors) {
+  var indexShift = 0;
+  sentenceErrors.forEach((item) => {
+    sentence = ReplaceAtIndex(
+      parseInt(item.offset) + indexShift,
+      sentence,
+      item.originalError,
+      item.proposals[0]
+    );
 
-        indexShift += parseInt(item.proposals[0].length) - parseInt(item.originalError.length);
-    });
+    indexShift +=
+      parseInt(item.proposals[0].length) - parseInt(item.originalError.length);
+  });
 
-    return sentence;
+  return sentence;
 }
-
 
 function ReplaceAtIndex(index, string, mask, replaceWith) {
-
-    return string.substring(0, index) + replaceWith + string.substring(index + mask.length);
+  return (
+    string.substring(0, index) +
+    replaceWith +
+    string.substring(index + mask.length)
+  );
 }
-
-
 
 // Request
 
-function RequestSentenceErrors(testString, callback)
-{
-    var xhr = new XMLHttpRequest();
-    var url = "https://mentor.duden.de/api/grammarcheck?_format=json";
-    xhr.open("POST", url, true);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            callback(xhr.responseText, testString);
-        }
-    };
+async function RequestSentenceErrors(testString) {}
 
+function GenerateRequestData(testString) {
+  var data = {
+    text: testString,
+    userInteraction: null,
+    documentID: "lite-1616792167663-fhTklcjkox",
+    maxProposals: 7,
+  };
 
-    requestData = GenerateRequestData(testString);
-    xhr.send(requestData);
-}
-
-
-function GenerateRequestData(testString)
-{
-    var data = {
-        "text": testString,
-        "userInteraction": null,
-        "documentID": "lite-1616792167663-fhTklcjkox",
-        "maxProposals": 7
-    }
-
-    return JSON.stringify(data);
+  return data;
 }
